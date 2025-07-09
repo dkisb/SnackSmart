@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center w-full min-h-screen bg-[#1A1A1A] text-[#F5F5F5] p-6">
       <div className="w-full max-w-2xl">
-        <h1 className="text-4xl font-bold mb-8 text-center text-[#FFD700]">Suleiman Nutrition AI</h1>
+        <h1 className="text-4xl font-bold mb-8 text-center text-[#FFD700]">SnackSmart Nutrition AI</h1>
 
         <div className="space-y-4 mb-8">
           {messages.map((message) => (
