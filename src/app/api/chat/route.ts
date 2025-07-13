@@ -1,5 +1,5 @@
-import { openai } from '@ai-sdk/openai';
-import { streamText } from 'ai';
+import { NextResponse } from 'next/server';
+import axios from 'axios';
 import { loadMarkdownData } from '@/library/loadMarkdown';
 
 export async function POST(req: Request) {
@@ -7,10 +7,7 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     if (!Array.isArray(messages) || messages.length === 0) {
-      return new Response(JSON.stringify({ error: 'No messages received.' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return NextResponse.json({ error: 'Nincsenek üzenetek.' }, { status: 400 });
     }
 
     const lastMessage = messages.pop();
@@ -18,42 +15,82 @@ export async function POST(req: Request) {
 
     const mdData = await loadMarkdownData();
 
-    const result = streamText({
-      model: openai('gpt-4o-mini'),
-      messages: [
-        {
-          role: 'system',
-          content: `
-Always answer in hungarian.
+    // Hívjuk meg a külső API-t stream-ben
+    const response = await axios.post(
+      'https://api.x.ai/v1/chat/completions',
+      {
+        model: 'grok-4',
+        messages: [
+          {
+            role: 'system',
+            content: `
+Mindig magyarul válaszolj.
 
-You are a professional nutrition assistant.
+Te egy professzionális táplálkozási asszisztens vagy. A felhasználó kérdéseire pontos, megbízható, és változatos válaszokat adsz.
 
-Use the following nutrition data to answer all user questions precisely:
+Az alábbi étrendadatok a viszonyítási alapod. Ha egy étel, étrend-kiegészítő vagy tápanyag szerepel bennük, akkor elsődlegesen ezekből meríts információt:
 
 ${mdData}
 
-If the user asks about nutrient amounts, meal planning, or supplements,
-always base your response on this data.
-        `.trim(),
+Viszont ha a felhasználó olyan ételről, étrendkiegészítőről, vagy kérdésről érdeklődik, ami a fenti adatbázisban **nem szerepel, vagy hiányos**, akkor bátran egészítsd ki megbízható források (pl. USDA, Nutritionix, EFSA, PubMed) alapján szerzett adatokkal.
+
+**Fontos:**
+- Adj változatos, kreatív étrendi javaslatokat, ne csak a sablonos ételeket ismételd.
+- Készíts teljes napi étrendeket is, ha a felhasználó ezt kéri (pl. reggeli, ebéd, vacsora, snack).
+- Minden étkezéshez írd le a pontos kalória- és makrotápanyag-értékeket (fehérje, szénhidrát, zsír).
+- Ha pontos értéket nem tudsz mondani, jelezd, hogy csak becsült adatokról van szó.
+- Adj javaslatokat étrend-kiegészítőkre is, ha indokolt.
+- Tartsd szem előtt a felhasználó egyéni adatait (nem, életkor, súly, magasság, célkalória, étkezések száma), ha ezek rendelkezésre állnak.
+- Ha a felhasználó változatosabb étrendet szeretne, mindig többféle opciót is adj.
+- Törekedj ízletes, élvezetes fogásokra is, ne csak a számokra.
+`.trim(),
+          },
+          {
+            role: 'user',
+            content: userPrompt,
+          },
+        ],
+        stream: true,
+        temperature: 0.7,
+        search_parameters: { enable: true },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+          'Content-Type': 'application/json',
         },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-      system:
-        'You are a professional nutrition assistant. Use the provided nutrition data to answer all user questions precisely. Always answer in hungarian.',
+        responseType: 'stream',
+      }
+    );
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        response.data.on('data', (chunk: Buffer) => {
+          // egyszerűen továbbítjuk a szöveges chunkot
+          const text = chunk.toString();
+          controller.enqueue(new TextEncoder().encode(text));
+        });
+
+        response.data.on('end', () => {
+          controller.close();
+        });
+
+        response.data.on('error', (err: Error) => {
+          console.error('Stream error:', err);
+          controller.error(err);
+        });
+      },
     });
 
-    return result.toDataStreamResponse();
+    return new NextResponse(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    });
   } catch (error) {
-    console.error('API Route Error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal Server Error',
-        details: String(error),
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    console.error('xAI API error:', error);
+    return NextResponse.json({ error: 'Belső szerverhiba', details: String(error) }, { status: 500 });
   }
 }

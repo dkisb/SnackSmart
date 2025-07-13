@@ -13,6 +13,8 @@ export default function UserForm({
   const [gender, setGender] = useState<'male' | 'female' | ''>('');
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');
+  const [targetWeight, setTargetWeight] = useState('');
+  const [activityLevel, setActivityLevel] = useState('');
   const [height, setHeight] = useState('');
   const [targetCalories, setTargetCalories] = useState('');
   const [mealsPerDay, setMealsPerDay] = useState('');
@@ -34,6 +36,8 @@ export default function UserForm({
 User Data:
 - Gender: ${gender}
 - Age: ${age}
+- Target Weight: ${targetWeight ? targetWeight + ' kg' : 'N/A'}
+- Activity Level: ${activityLevel ? activityLevel : 'N/A'} times a week
 - Weight: ${weight} kg
 - Height: ${height} cm
 ${optionalDetails ? optionalDetails : ''}
@@ -49,6 +53,8 @@ Please generate a personalized meal plan with accurate nutrient breakdowns and s
     setGender('');
     setAge('');
     setWeight('');
+    setActivityLevel('');
+    setTargetWeight('');
     setHeight('');
     setTargetCalories('');
     setMealsPerDay('');
@@ -109,13 +115,28 @@ Please generate a personalized meal plan with accurate nutrient breakdowns and s
         />
         <input
           type="number"
+          placeholder="Target Weight (kg)"
+          value={targetWeight}
+          onChange={(e) => setTargetWeight(e.target.value)}
+          className="bg-[#333333] text-[#F5F5F5] border border-[#444444] p-3 w-full rounded focus:outline-none focus:border-[#FFD700]"
+          required
+        />
+        <input
+          type="number"
+          placeholder="How many times do you exercise per week?"
+          value={activityLevel}
+          onChange={(e) => setActivityLevel(e.target.value)}
+          className="bg-[#333333] text-[#F5F5F5] border border-[#444444] p-3 w-full rounded focus:outline-none focus:border-[#FFD700]"
+          required
+        />
+        <input
+          type="number"
           placeholder="Height (cm)"
           value={height}
           onChange={(e) => setHeight(e.target.value)}
           className="bg-[#333333] text-[#F5F5F5] border border-[#444444] p-3 w-full rounded focus:outline-none focus:border-[#FFD700]"
           required
         />
-
         <input
           type="number"
           placeholder="Target daily calories (optional)"
