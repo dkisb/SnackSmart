@@ -20,7 +20,16 @@ export default function Home() {
     setMessages((prev) => [...prev, newMessage]);
 
     if (message.role === 'user') {
-      setIsLoading(true);
+      const streamId = `streaming-${Date.now()}`;
+      // Azonnal hozzáadjuk az AI üzenetet "Válasz generálása..." tartalommal
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: streamId,
+          role: 'assistant',
+          content: 'Válasz generálása...',
+        },
+      ]);
 
       try {
         const response = await fetch('/api/chat', {
@@ -36,17 +45,7 @@ export default function Home() {
         const reader = response.body?.getReader();
         const decoder = new TextDecoder('utf-8');
         let text = '';
-        let streamId = `streaming-${Date.now()}`;
         let buffer = '';
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: streamId,
-            role: 'assistant',
-            content: '',
-          },
-        ]);
 
         while (true) {
           const { done, value } = await reader!.read();
@@ -74,18 +73,13 @@ export default function Home() {
 
               let chunkText = '';
 
-              if (delta?.reasoning_content) {
-                // optional: prepend tag for clarity
-                chunkText += `[Thinking] ${delta.reasoning_content}`;
-              }
-
               if (delta?.content) {
                 chunkText += delta.content;
               }
 
               if (chunkText) {
                 text += chunkText;
-
+                // Frissítjük az üzenetet, eltávolítva a "Válasz generálása..." szöveget
                 setMessages((prev) => prev.map((msg) => (msg.id === streamId ? { ...msg, content: text } : msg)));
               }
             } catch (err) {
@@ -100,7 +94,7 @@ export default function Home() {
               ? {
                   ...msg,
                   id: `assistant-${Date.now()}`,
-                  content: text,
+                  content: text || 'Válasz generálása... (Nincs tartalom)', // Ha üres a válasz
                 }
               : msg
           )

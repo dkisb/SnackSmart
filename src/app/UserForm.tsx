@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { CreateMessage } from '@ai-sdk/react';
+import { set } from 'zod/v4';
 
 export default function UserForm({
   append,
@@ -10,6 +11,7 @@ export default function UserForm({
   append: (msg: CreateMessage) => void;
   onSubmitSuccess: () => void;
 }) {
+  const [type, setType] = useState<'bulk' | 'cut' | ''>('');
   const [gender, setGender] = useState<'male' | 'female' | ''>('');
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');
@@ -33,7 +35,8 @@ export default function UserForm({
     }
 
     const userMessage = `
-User Data:
+Bevitt felhasználói adatok:
+- Diet Type: ${type}
 - Gender: ${gender}
 - Age: ${age}
 - Target Weight: ${targetWeight ? targetWeight + ' kg' : 'N/A'}
@@ -51,6 +54,7 @@ Please generate a personalized meal plan with accurate nutrient breakdowns and s
     });
 
     setGender('');
+    setType('');
     setAge('');
     setWeight('');
     setActivityLevel('');
@@ -93,6 +97,33 @@ Please generate a personalized meal plan with accurate nutrient breakdowns and s
                 required
               />
               <span>Female</span>
+            </label>
+          </div>
+          <label className="block text-[#F5F5F5] mb-2">Diet type</label>
+          <div className="flex space-x-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="diet"
+                value="cut"
+                checked={type === 'cut'}
+                onChange={() => setType('cut')}
+                className="accent-[#FFD700]"
+                required
+              />
+              <span>Cut</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="diet"
+                value="bulk"
+                checked={type === 'bulk'}
+                onChange={() => setType('bulk')}
+                className="accent-[#FFD700]"
+                required
+              />
+              <span>Bulk</span>
             </label>
           </div>
         </div>
