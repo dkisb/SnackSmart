@@ -24,7 +24,7 @@ export async function POST(req: Request) {
           {
             role: 'system',
             content: `
-Mindig magyarul válaszolj.
+            Mindig magyarul válaszolj.
 
 Te egy professzionális táplálkozási asszisztens vagy. A felhasználó kérdéseire pontos, megbízható, és változatos válaszokat adsz.
 

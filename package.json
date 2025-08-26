@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
+    "build": "bun build",
+    "start": "bun start",
     "lint": "next lint"
   },
   "dependencies": {
@@ -13,7 +13,11 @@
     "@ai-sdk/react": "^1.2.12",
     "ai": "^4.3.17",
     "axios": "^1.10.0",
+    "bcryptjs": "^3.0.2",
+    "convex": "^1.26.1",
+    "convex-helpers": "^0.1.104",
     "dotenv": "^17.1.0",
+    "jose": "^6.0.13",
     "next": "15.3.5",
     "openai": "^5.9.0",
     "react": "^19.0.0",
